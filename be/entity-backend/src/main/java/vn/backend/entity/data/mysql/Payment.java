@@ -33,7 +33,7 @@ public class Payment extends BaseEntity {
     String currency = "USD";
 
     @Builder.Default
-    PaymentMethod paymentMethod = PaymentMethod.STRIPE;
+    PaymentMethod paymentMethod = PaymentMethod.CASH;
 
     @Builder.Default
     PaymentStatus paymentStatus = PaymentStatus.PENDING;
