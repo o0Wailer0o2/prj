@@ -1,4 +1,4 @@
-package vn.backend.core.data.request;
+package vn.backend.core.data.request.paypal;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -9,10 +9,10 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @Setter
-public class StripeCreatePaymentRequest {
+public class PayPalCreatePaymentRequest {
     @NotNull
     Integer orderId;
-
-    @NotNull
+    
     String returnUrl;
+    String cancelUrl;
 }

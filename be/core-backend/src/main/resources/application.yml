@@ -39,8 +39,14 @@ jwt:
   secret-key-access-token: ${SECRET_KET_AT:TuAnD3pZa1Jyl3use1/ChT3uaD1PZa4V0ick+T84IABvc}
   secret-key-refresh-token: ${SECRET_KEY_RT:Ty@nDzaiHc23grw3@/Tr0NgVt23Ym+145hjgRtBn9fv6y}
 
-stripe:
-  secret-key: sk_test_51SbfhpE9IPXqNCFleiZiy6IacS6Jy41kxLMHu8CQQiJHhW0F8yTxNeog4P8hPR1ltNiLpAxx9Bw2cnNNTDfGRDab00Jxf6bmds
-  webhook-secret: whsec_8wjZQUIKSk30umdeUlGmGu7zartUhCQ4
-  success-url: /order-success
-  cancel-url: /checkout
+# VietQR Payment Configuration
+vietqr:
+  api-url: ${VIETQR_API_URL:https://api.vietqr.io}
+  client-id: ${VIETQR_CLIENT_ID:}
+  api-key: ${VIETQR_API_KEY:}
+
+# PayPal Payment Configuration (for VNPay method)
+paypal:
+  base-url: ${PAYPAL_BASE_URL:https://api-m.sandbox.paypal.com}
+  client-id: ${PAYPAL_CLIENT_ID:}
+  client-secret: ${PAYPAL_CLIENT_SECRET:}

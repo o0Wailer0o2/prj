@@ -1,4 +1,4 @@
-package vn.backend.core.data.response;
+package vn.backend.core.data.response.vietqr;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -10,7 +10,10 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class StripeResponse {
-    String sessionId;
-    String sessionUrl;
+public class VietQRResponse {
+    String qrCode;
+    String qrDataURL;
+    String transactionId;
+    Double amount;
+    String description;
 }
