@@ -234,7 +234,8 @@ public class VietQRService {
 
     private boolean verifySignature(VietQRCallbackRequest callback) {
         if (callback.getSignature() == null || callback.getSignature().isEmpty()) {
-            return true;
+            log.warn("VietQR callback received without signature - rejecting");
+            return false;
         }
 
         try {

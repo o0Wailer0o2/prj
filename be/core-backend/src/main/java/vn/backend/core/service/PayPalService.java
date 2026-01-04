@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
 @Service
@@ -39,6 +40,7 @@ public class PayPalService {
     private final PaymentRepository paymentRepository;
     private final OkHttpClient httpClient = new OkHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ReentrantLock tokenLock = new ReentrantLock();
 
     @Value("${paypal.base-url}")
     private String baseUrl;
@@ -49,8 +51,8 @@ public class PayPalService {
     @Value("${paypal.client-secret}")
     private String clientSecret;
 
-    private String cachedAccessToken;
-    private long tokenExpiryTime = 0;
+    private volatile String cachedAccessToken;
+    private volatile long tokenExpiryTime = 0;
 
     @Transactional
     public PayPalPaymentResponse createPaymentFromOrder(PayPalCreatePaymentRequest request) {
@@ -211,38 +213,47 @@ public class PayPalService {
         }
     }
 
-    private synchronized String getAccessToken() throws Exception {
+    private String getAccessToken() throws Exception {
         if (cachedAccessToken != null && System.currentTimeMillis() < tokenExpiryTime) {
             return cachedAccessToken;
         }
 
-        String auth = clientId + ":" + clientSecret;
-        String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
-
-        RequestBody body = new FormBody.Builder()
-                .add("grant_type", "client_credentials")
-                .build();
-
-        Request request = new Request.Builder()
-                .url(baseUrl + "/v1/oauth2/token")
-                .addHeader("Authorization", "Basic " + encodedAuth)
-                .addHeader("Content-Type", "application/x-www-form-urlencoded")
-                .post(body)
-                .build();
-
-        try (Response response = httpClient.newCall(request).execute()) {
-            if (!response.isSuccessful()) {
-                throw new RuntimeException("Failed to get PayPal access token: " + response.code());
+        tokenLock.lock();
+        try {
+            if (cachedAccessToken != null && System.currentTimeMillis() < tokenExpiryTime) {
+                return cachedAccessToken;
             }
 
-            String responseBody = response.body().string();
-            JsonNode jsonResponse = objectMapper.readTree(responseBody);
-            
-            cachedAccessToken = jsonResponse.get("access_token").asText();
-            int expiresIn = jsonResponse.get("expires_in").asInt();
-            tokenExpiryTime = System.currentTimeMillis() + (expiresIn - 60) * 1000L;
+            String auth = clientId + ":" + clientSecret;
+            String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
 
-            return cachedAccessToken;
+            RequestBody body = new FormBody.Builder()
+                    .add("grant_type", "client_credentials")
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(baseUrl + "/v1/oauth2/token")
+                    .addHeader("Authorization", "Basic " + encodedAuth)
+                    .addHeader("Content-Type", "application/x-www-form-urlencoded")
+                    .post(body)
+                    .build();
+
+            try (Response response = httpClient.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    throw new RuntimeException("Failed to get PayPal access token: " + response.code());
+                }
+
+                String responseBody = response.body().string();
+                JsonNode jsonResponse = objectMapper.readTree(responseBody);
+                
+                cachedAccessToken = jsonResponse.get("access_token").asText();
+                int expiresIn = jsonResponse.get("expires_in").asInt();
+                tokenExpiryTime = System.currentTimeMillis() + (expiresIn - 60) * 1000L;
+
+                return cachedAccessToken;
+            }
+        } finally {
+            tokenLock.unlock();
         }
     }
 

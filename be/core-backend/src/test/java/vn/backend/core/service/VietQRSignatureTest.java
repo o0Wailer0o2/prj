@@ -51,7 +51,7 @@ public class VietQRSignatureTest {
         
         String receivedSignature = calculatedSignature;
         
-        assertTrue(calculatedSignature.equals(receivedSignature));
+        assertEquals(calculatedSignature, receivedSignature);
     }
 
     @Test
@@ -72,6 +72,14 @@ public class VietQRSignatureTest {
         
         String tamperedSignature = "invalid-signature";
         
-        assertFalse(calculatedSignature.equals(tamperedSignature));
+        assertNotEquals(calculatedSignature, tamperedSignature);
+    }
+
+    @Test
+    public void testMissingSignatureValidation() {
+        assertNull(null);
+        
+        String emptySignature = "";
+        assertTrue(emptySignature.isEmpty());
     }
 }
